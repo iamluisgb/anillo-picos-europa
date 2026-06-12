@@ -222,7 +222,7 @@ button { font-family: inherit; }
 
 /* Sidebar toggle (mobile) */
 #sidebar-toggle {
-  display: none; position: absolute; top: 15px; left: 15px; z-index: 1001;
+  display: none; position: absolute; top: 15px; left: 15px; z-index: 1003;
   background: #1e3a5f; border: 1px solid #4fc3f7; color: #4fc3f7;
   width: 42px; height: 42px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;
 }
@@ -264,3 +264,10 @@ button { font-family: inherit; }
   #layer-fab { display: block; }
   #elevation-panel { height: 42vh; }
 }
+
+/* Sidebar overlay (mobile) */
+#sidebar-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1001;
+  background: rgba(0,0,0,0.5); cursor: pointer;
+}
+#sidebar-overlay.visible { display: block; }

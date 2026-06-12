@@ -142,7 +142,10 @@ function selectStage(sec, id) {
   sec.querySelector('.day-details').classList.add('open');
   sec.querySelector('.day-header').setAttribute('aria-expanded', 'true');
   flyToTrack(id);
-  if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('open');
+  if (window.innerWidth <= 820) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  }
 }
 
 function flyToTrack(id) {
@@ -452,7 +455,14 @@ document.getElementById('btn-2d').addEventListener('click', () => setView('2d'))
 document.getElementById('btn-3d').addEventListener('click', () => setView('3d'));
 document.getElementById('real-track-btn').addEventListener('click', toggleRealTrack);
 document.getElementById('elevation-toggle').addEventListener('click', toggleElevation);
-document.getElementById('sidebar-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  const open = sidebar.classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible', open);
+});
+document.getElementById('sidebar-overlay').addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+});
 document.getElementById('layer-fab').addEventListener('click', () => document.getElementById('layer-control').classList.toggle('open'));
 
 // Sidebar collapse (desktop)
@@ -472,6 +482,7 @@ sidebarCollapse.addEventListener('click', () => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && sidebar.classList.contains('open')) {
     sidebar.classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
   }
 });
 
