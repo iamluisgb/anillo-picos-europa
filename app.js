@@ -40,16 +40,16 @@ const style = {
   },
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': '#0f1923' } },
-    { id: 'topo', type: 'raster', source: 'topo' },
-    { id: 'satellite', type: 'raster', source: 'satellite', layout: { visibility: 'none' } },
-    { id: 'hillshade', type: 'hillshade', source: 'dem-hs', paint: { 'hillshade-exaggeration': 0.45, 'hillshade-shadow-color': '#1a2530' } },
+    { id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+    { id: 'satellite', type: 'raster', source: 'satellite' },
+    { id: 'hillshade', type: 'hillshade', source: 'dem-hs', paint: { 'hillshade-exaggeration': 0.12, 'hillshade-shadow-color': '#1a2530' } },
   ],
   terrain: { source: 'dem', exaggeration: 1.5 },
 };
 
 const map = new maplibregl.Map({
   container: 'map', style,
-  center: [-4.845, 43.195], zoom: 11.3, pitch: 65, bearing: 12, maxPitch: 80,
+  center: [-4.845, 43.195], zoom: 11.3, pitch: 0, bearing: 0, maxPitch: 80,
   attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
@@ -95,7 +95,7 @@ map.on('load', () => {
   });
 
   buildSidebar();
-  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: 70, pitch: 65, bearing: 12, duration: 0 });
+  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: 70, pitch: 0, bearing: 0, duration: 0 });
 });
 
 map.once('idle', () => { document.getElementById('map-loader').classList.add('hidden'); });
@@ -163,8 +163,8 @@ function flyToTrack(id) {
 
   map.fitBounds(b, {
     padding: { top: 60, bottom: 60, left: 440, right: 60 },
-    pitch: map.getPitch() > 5 ? 65 : 0,
-    bearing: bearing,
+    pitch: map.getPitch(),
+    bearing: map.getBearing() !== 0 ? map.getBearing() : bearing,
     duration: 1300,
   });
 
@@ -238,7 +238,7 @@ function showFullRoute() {
   highlightTrack(null);
   document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
   document.getElementById('full-route-btn').classList.remove('show');
-  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: { top: 60, bottom: 60, left: 440, right: 60 }, pitch: map.getPitch() > 5 ? 65 : 0, duration: 1100 });
+  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: { top: 60, bottom: 60, left: 440, right: 60 }, pitch: map.getPitch(), bearing: map.getBearing(), duration: 1100 });
   if (panelVisible()) drawElevationChart();
 }
 
