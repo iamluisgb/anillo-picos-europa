@@ -25,11 +25,16 @@ let hoverMarker = null;
 
 /* ---------- Mapa ---------- */
 const DEM = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
+// Satélite de alta resolución vía MapTiler si hay clave (config.js); si no, Esri.
+const MT = (typeof MAPTILER_KEY !== 'undefined' && MAPTILER_KEY) ? MAPTILER_KEY : null;
+const satelliteSource = MT
+  ? { type: 'raster', tiles: [`https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=${MT}`], tileSize: 512, maxzoom: 20, attribution: '© MapTiler © Maxar' }
+  : { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: '© Esri' };
 const style = {
   version: 8,
   sources: {
     topo: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: '© Esri' },
-    satellite: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: '© Esri' },
+    satellite: satelliteSource,
     dem: { type: 'raster-dem', tiles: [DEM], encoding: 'terrarium', tileSize: 256, maxzoom: 15, attribution: 'Terreno: AWS / Mapzen' },
     'dem-hs': { type: 'raster-dem', tiles: [DEM], encoding: 'terrarium', tileSize: 256, maxzoom: 15 },
   },
