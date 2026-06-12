@@ -141,8 +141,13 @@ function selectStage(sec, id) {
   sec.classList.add('open', 'active');
   sec.querySelector('.day-details').classList.add('open');
   sec.querySelector('.day-header').setAttribute('aria-expanded', 'true');
-  flyToTrack(id);
-  if (window.innerWidth <= 820) setMobileSidebar(false);
+  // En móvil: cerrar sidebar primero, luego volar tras la transición
+  if (window.innerWidth <= 820) {
+    setMobileSidebar(false);
+    setTimeout(() => flyToTrack(id), 350);
+  } else {
+    flyToTrack(id);
+  }
 }
 
 function flyToTrack(id) {
