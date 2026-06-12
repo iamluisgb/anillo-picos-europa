@@ -380,7 +380,9 @@ function setPressed(id, on) {
 function toggleElevation() {
   const p = document.getElementById('elevation-panel');
   const open = p.classList.toggle('visible');
-  document.getElementById('elevation-toggle').textContent = open ? '📈 Ocultar' : '📈 Perfil';
+  const btn = document.getElementById('elevation-toggle');
+  btn.classList.toggle('active', open);
+  btn.textContent = open ? '📈 Ocultar perfil' : '📈 Perfil de altitud';
   if (open) setTimeout(drawElevationChart, 60);
 }
 
@@ -400,5 +402,26 @@ document.getElementById('real-track-btn').addEventListener('click', toggleRealTr
 document.getElementById('elevation-toggle').addEventListener('click', toggleElevation);
 document.getElementById('sidebar-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
 document.getElementById('layer-fab').addEventListener('click', () => document.getElementById('layer-control').classList.toggle('open'));
+
+// Sidebar collapse (desktop)
+const sidebarCollapse = document.getElementById('sidebar-collapse');
+const sidebar = document.getElementById('sidebar');
+sidebarCollapse.addEventListener('click', () => {
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  sidebarCollapse.classList.toggle('collapsed');
+  sidebarCollapse.textContent = isCollapsed ? '▷' : '◁';
+  sidebarCollapse.setAttribute('aria-label', isCollapsed ? 'Expandir panel' : 'Colapsar panel');
+  sidebarCollapse.setAttribute('title', isCollapsed ? 'Expandir panel' : 'Colapsar panel');
+  // Actualizar mapa después de la transición
+  setTimeout(() => map.resize(), 320);
+});
+
+// ESC para cerrar sidebar en móvil
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+    sidebar.classList.remove('open');
+  }
+});
+
 window.addEventListener('resize', debounce(() => { if (panelVisible()) drawElevationChart(); }, 150));
 setupProfileHover();
