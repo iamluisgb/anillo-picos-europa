@@ -281,25 +281,31 @@ function buildProfile() {
   } else {
     segments = realTracks.filter(t => t.kind === 'route'); label = 'Ruta completa';
   }
-  const pts = []; let d = 0; const interpRanges = []; let gain = 0, loss = 0;
+  let d = 0; const interpRanges = []; let gain = 0, loss = 0;
+  const resultSegments = [];
+  const pts = []; // full-res for hover
   segments.forEach(t => {
-    // escala cada tramo a su km oficial (las coords están submuestreadas y miden de menos)
     let raw = 0;
     for (let i = 1; i < t.coords.length; i++) raw += haversineKm([t.coords[i - 1][0], t.coords[i - 1][1]], [t.coords[i][0], t.coords[i][1]]);
     const scale = raw > 0 ? t.km / raw : 1;
     const segStart = d;
+    const rawPts = [];
     t.coords.forEach((c, i) => {
       if (i > 0) d += haversineKm([t.coords[i - 1][0], t.coords[i - 1][1]], [c[0], c[1]]) * scale;
-      pts.push({ d, e: c[2], lat: c[0], lng: c[1] });
+      const p = { d, e: c[2], lat: c[0], lng: c[1] };
+      rawPts.push(p);
+      pts.push(p);
     });
     if (t.interp) interpRanges.push([segStart + t.interp[0], segStart + t.interp[1]]);
     gain += t.gain; loss += t.loss;
+    // downsample for drawing
+    const step = Math.max(1, Math.ceil(rawPts.length / 600));
+    const draw = rawPts.filter((_, i) => i % step === 0);
+    if (draw[draw.length - 1] !== rawPts[rawPts.length - 1]) draw.push(rawPts[rawPts.length - 1]);
+    resultSegments.push({ draw, name: t.name, color: t.color });
   });
-  // downsample para dibujar (mantener <= 600 puntos)
-  const step = Math.max(1, Math.ceil(pts.length / 600));
-  const draw = pts.filter((_, i) => i % step === 0);
-  if (draw[draw.length - 1] !== pts[pts.length - 1]) draw.push(pts[pts.length - 1]);
-  return { pts, draw, label, totalKm: d, interpRanges, gain, loss };
+  const totalKm = d;
+  return { segments: resultSegments, pts, label, totalKm, interpRanges, gain, loss };
 }
 
 let profileCache = null;
@@ -315,13 +321,17 @@ function drawElevationChart() {
   const panel = document.getElementById('elevation-chart');
   const canvas = document.getElementById('elev-canvas');
   const w = panel.offsetWidth, h = panel.offsetHeight;
-  canvas.width = w; canvas.height = h;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
   const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
   const pad = { top: 24, right: 20, bottom: 30, left: 54 };
   profileCache = buildProfile();
-  const { draw, label, totalKm, interpRanges, gain, loss } = profileCache;
-  if (!draw.length) return;
-  const eles = draw.map(p => p.e);
+  const { segments, label, totalKm, interpRanges, gain, loss } = profileCache;
+  if (!segments.length || !segments[0].draw.length) return;
+  const allDraw = segments.flatMap(s => s.draw);
+  const eles = allDraw.map(p => p.e);
   const minA = Math.min(...eles) - 50, maxA = Math.max(...eles) + 50, range = maxA - minA || 1;
   const X = d => pad.left + (d / (totalKm || 1)) * (w - pad.left - pad.right);
   const Y = e => pad.top + ((maxA - e) / range) * (h - pad.top - pad.bottom);
@@ -336,39 +346,64 @@ function drawElevationChart() {
 
   // rejilla + eje Y
   ctx.strokeStyle = '#1a2a3a'; ctx.lineWidth = 1;
+  ctx.font = `11px 'Segoe UI', system-ui, -apple-system, sans-serif`;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + (i / 4) * (h - pad.top - pad.bottom);
     ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
-    ctx.fillStyle = '#8899aa'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#8899aa'; ctx.textAlign = 'right';
     ctx.fillText(`${Math.round(maxA - (i / 4) * range)}m`, pad.left - 5, y + 4);
   }
   // eje X (km)
   ctx.textAlign = 'center';
   const kmStep = Math.max(1, Math.round(totalKm / 8));
-  for (let k = 0; k <= Math.floor(totalKm); k += kmStep) ctx.fillText(`${k}`, X(k), h - pad.bottom + 16);
+  for (let k = 0; k <= Math.floor(totalKm); k += kmStep) ctx.fillText(`${k} km`, X(k), h - pad.bottom + 16);
 
-  // relleno bajo la curva
+  // Relleno bajo la curva (un único gradiente suave)
   const grad = ctx.createLinearGradient(0, pad.top, 0, h - pad.bottom);
-  grad.addColorStop(0, 'rgba(79,195,247,0.25)'); grad.addColorStop(1, 'rgba(79,195,247,0.03)');
-  ctx.beginPath(); ctx.moveTo(X(draw[0].d), h - pad.bottom);
-  draw.forEach(p => ctx.lineTo(X(p.d), Y(p.e)));
-  ctx.lineTo(X(draw[draw.length - 1].d), h - pad.bottom); ctx.closePath();
+  grad.addColorStop(0, 'rgba(79,195,247,0.18)'); grad.addColorStop(1, 'rgba(79,195,247,0.02)');
+  ctx.beginPath(); ctx.moveTo(pad.left, h - pad.bottom);
+  let lastSeg = segments[segments.length - 1];
+  segments.forEach(s => s.draw.forEach(p => ctx.lineTo(X(p.d), Y(p.e))));
+  ctx.lineTo(X(lastSeg.draw[lastSeg.draw.length - 1].d), h - pad.bottom); ctx.closePath();
   ctx.fillStyle = grad; ctx.fill();
 
-  // línea coloreada por pendiente
+  // Línea coloreada por etapa (cada tramo con su color)
   ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-  for (let i = 1; i < draw.length; i++) {
-    const a = draw[i - 1], b = draw[i];
-    const dd = (b.d - a.d) * 1000 || 1;
-    ctx.beginPath();
-    ctx.strokeStyle = slopeColor(((b.e - a.e) / dd) * 100);
-    ctx.moveTo(X(a.d), Y(a.e)); ctx.lineTo(X(b.d), Y(b.e)); ctx.stroke();
-  }
+  segments.forEach(s => {
+    const draw = s.draw;
+    if (draw.length < 2) return;
+    // Color de la etapa o por pendiente si es un único track (vista detalle)
+    const useSlopeColors = segments.length === 1;
+    for (let i = 1; i < draw.length; i++) {
+      const a = draw[i - 1], b = draw[i];
+      if (useSlopeColors) {
+        const dd = (b.d - a.d) * 1000 || 1;
+        ctx.strokeStyle = slopeColor(((b.e - a.e) / dd) * 100);
+      } else {
+        ctx.strokeStyle = s.color || '#4fc3f7';
+      }
+      ctx.beginPath();
+      ctx.moveTo(X(a.d), Y(a.e)); ctx.lineTo(X(b.d), Y(b.e)); ctx.stroke();
+    }
+  });
 
-  // cabecera
-  ctx.fillStyle = '#90caf9'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left';
-  ctx.fillText(`${label} · ${totalKm.toFixed(1)} km · +${gain}/-${loss} m`, pad.left, 15);
-  if (interpRanges.length) { ctx.fillStyle = '#ffb74d'; ctx.textAlign = 'right'; ctx.fillText('▨ altitud estimada', w - pad.right, 15); }
+  // Cabecera
+  ctx.fillStyle = '#90caf9'; ctx.font = `bold 12px 'Segoe UI', system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText(`${label} · ${totalKm.toFixed(1)} km · +${gain}/-${loss} m`, pad.left, 14);
+  if (interpRanges.length) { ctx.fillStyle = '#ffb74d'; ctx.textAlign = 'right'; ctx.font = `11px 'Segoe UI', system-ui, -apple-system, sans-serif`; ctx.fillText('▨ altitud estimada', w - pad.right, 14); }
+
+  // Leyenda de colores de etapa (solo cuando se muestran varias)
+  if (segments.length > 1) {
+    let lx = pad.left;
+    segments.forEach(s => {
+      ctx.fillStyle = s.color; ctx.font = `11px 'Segoe UI', system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'left';
+      const txt = `— ${s.name}`;
+      ctx.fillText(txt, lx, h - 4);
+      lx += ctx.measureText(txt).width + 14;
+    });
+  }
 
   profileGeom = { pad, w, h, minA, maxA, range, X, Y };
 }
