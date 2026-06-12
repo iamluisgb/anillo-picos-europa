@@ -523,7 +523,10 @@ sidebarCollapse.addEventListener('click', () => {
   sidebarCollapse.setAttribute('aria-label', isCollapsed ? 'Expandir panel' : 'Colapsar panel');
   sidebarCollapse.setAttribute('title', isCollapsed ? 'Expandir panel' : 'Colapsar panel');
   // Actualizar mapa después de la transición
-  setTimeout(() => map.resize(), 320);
+  setTimeout(() => {
+    map.resize();
+    if (panelVisible()) drawElevationChart();
+  }, 320);
 });
 
 // ESC para cerrar sidebar en móvil
