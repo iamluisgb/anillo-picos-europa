@@ -152,10 +152,62 @@ function flyToTrack(id) {
   highlightTrack(id);
   const b = new maplibregl.LngLatBounds();
   t.coords.forEach(c => b.extend([c[1], c[0]]));
-  map.fitBounds(b, { padding: 90, pitch: map.getPitch() > 5 ? 65 : 0, duration: 1300 });
+
+  // Calcular bearing óptimo según la dirección dominante de la ruta
+  const bearing = calcTrackBearing(t.coords);
+
+  map.fitBounds(b, {
+    padding: { top: 60, bottom: 60, left: 440, right: 60 },
+    pitch: map.getPitch() > 5 ? 65 : 0,
+    bearing: bearing,
+    duration: 1300,
+  });
+
   currentProfile = id;
   document.getElementById('full-route-btn').classList.add('show');
   if (panelVisible()) drawElevationChart();
+}
+
+// Bearing entre dos puntos [lng, lat]
+function calcBearing(lng1, lat1, lng2, lat2) {
+  const toRad = d => d * Math.PI / 180;
+  const toDeg = r => r * 180 / Math.PI;
+  const dLng = toRad(lng2 - lng1);
+  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+            Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+// Calcula el bearing óptimo para visualizar una ruta completa
+// Usa PCA simplificada sobre las coordenadas para encontrar el eje principal
+function calcTrackBearing(coords) {
+  if (coords.length < 2) return 0;
+
+  // Centroide
+  let sumLat = 0, sumLng = 0;
+  coords.forEach(c => { sumLat += c[0]; sumLng += c[1]; });
+  const cLat = sumLat / coords.length;
+  const cLng = sumLng / coords.length;
+
+  // Covarianza simplificada
+  let xx = 0, xy = 0;
+  coords.forEach(c => {
+    const dx = c[1] - cLng;  // lng
+    const dy = c[0] - cLat;  // lat
+    xx += dx * dx;
+    xy += dx * dy;
+  });
+
+  // Ángulo del eje principal
+  const toDeg = r => r * 180 / Math.PI;
+  const axisAngle = toDeg(Math.atan2(xy, xx));
+
+  // El bearing para que la ruta se vea de abajo a arriba es perpendicular al eje principal
+  // Si el eje va O-E (angle ~0), bearing = 90 (mirar desde el sur)
+  // Si el eje va N-S (angle ~90), bearing = 0 (mirar desde el oeste)
+  const bearing = ((axisAngle + 90) + 360) % 360;
+  return bearing;
 }
 
 function highlightTrack(id) {
@@ -181,7 +233,7 @@ function showFullRoute() {
   highlightTrack(null);
   document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
   document.getElementById('full-route-btn').classList.remove('show');
-  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: 70, pitch: map.getPitch() > 5 ? 65 : 0, duration: 1100 });
+  if (!fullBounds.isEmpty()) map.fitBounds(fullBounds, { padding: { top: 60, bottom: 60, left: 440, right: 60 }, pitch: map.getPitch() > 5 ? 65 : 0, duration: 1100 });
   if (panelVisible()) drawElevationChart();
 }
 
