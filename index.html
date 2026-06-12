@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anillo Central de Picos de Europa</title>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <h1>Anillo Central de Picos de Europa</h1>
+        <p>Ruta: 59,5 km · 4203 m+ · 5 etapas + 1 cumbre</p>
+      </div>
+      <div id="sidebar-content">
+        <div class="stats-bar">
+          <div class="stat-card"><div class="value">5</div><div class="label">Etapas</div></div>
+          <div class="stat-card"><div class="value">59,5</div><div class="label">Km</div></div>
+          <div class="stat-card"><div class="value">4203</div><div class="label">m+ Desnivel</div></div>
+        </div>
+
+        <button class="full-route-btn" id="full-route-btn">↩ Ver ruta completa</button>
+
+        <div class="section-label">Ruta principal</div>
+
+        <div class="day-section" data-track="t1a">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">1</span>
+            <span class="day-info"><span class="date">Etapa 1</span><span class="route">Pandébano → Refugio de Urriellu</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">7,1 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+881 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-70 m</span></div>
+            <div class="day-notes">Por el paso equipado de la Corona del Raso.</div>
+          </div>
+        </div>
+
+        <div class="day-section" data-track="t1b">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">2</span>
+            <span class="day-info"><span class="date">Etapa 2</span><span class="route">Urriellu → Refugio de Cabrones</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">5,2 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+432 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-343 m</span></div>
+          </div>
+        </div>
+
+        <div class="day-section" data-track="t2">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">3</span>
+            <span class="day-info"><span class="date">Etapa 3</span><span class="route">Cabrones → Caín (por Piedra Bellida)</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">12,6 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+856 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-2454 m</span></div>
+            <div class="day-notes">Gran bajada hasta Caín (≈450 m). Traza limpia con altitud de la grabación de 2019.</div>
+          </div>
+        </div>
+
+        <div class="day-section" data-track="t3">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">4</span>
+            <span class="day-info"><span class="date">Etapa 4</span><span class="route">Caín → Refugio Collado Jermoso</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">10,9 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+1625 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-93 m</span></div>
+            <div class="day-notes">Subida continua desde el fondo del valle.</div>
+          </div>
+        </div>
+
+        <div class="day-section" data-track="t5">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">5</span>
+            <span class="day-info"><span class="date">Etapa 5</span><span class="route">Collado Jermoso → Áliva → Pandébano</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">23,7 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+409 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-1299 m</span></div>
+            <div class="day-notes">Cierra el anillo en Pandébano. El enlace Collado Jermoso → Áliva (12,2 km) no traía altitud en el GPS: su elevación está interpolada (sombreada en el perfil).</div>
+          </div>
+        </div>
+
+        <div class="section-label">Cumbre opcional</div>
+
+        <div class="day-section" data-track="p1">
+          <button class="day-header" aria-expanded="false">
+            <span class="day-number">▲</span>
+            <span class="day-info"><span class="date">Cumbre · 2648 m</span><span class="route">Torre Cerredo (desde Cabrones, vía Urriellu)</span></span>
+            <span class="day-chevron">▶</span>
+          </button>
+          <div class="day-details">
+            <div class="detail-row"><span class="key">Distancia</span><span class="val">9,7 km</span></div>
+            <div class="detail-row"><span class="key">Desnivel +</span><span class="val positive">+787 m</span></div>
+            <div class="detail-row"><span class="key">Desnivel -</span><span class="val negative">-866 m</span></div>
+            <div class="day-notes">Techo de Asturias y León.</div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <h3>Leyenda</h3>
+          <div class="legend-row"><span class="legend-line" style="border-color:#9aa7b4"></span> Etapa de ruta (color propio)</div>
+          <div class="legend-row"><span class="legend-line dashed" style="border-color:#ef5350"></span> Cumbre opcional</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#4fc3f7"></span> Inicio / fin</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#66bb6a"></span> Refugio</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#ffa726"></span> Pueblo</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#ef5350"></span> Cumbre</div>
+        </div>
+
+        <div class="day-notes" style="margin-top:16px;border-left-color:#66bb6a;color:#a5d6a7;">
+          Vista 3D (MapLibre + relieve real). Arrastra con botón derecho / dos dedos para girar e inclinar.
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div id="map-container">
+      <button id="sidebar-toggle" aria-label="Menú">☰</button>
+      <button id="layer-fab" aria-label="Capas">⚙</button>
+      <div id="map"></div>
+      <div id="map-loader"><span class="spinner"></span> Cargando relieve 3D…</div>
+
+      <div class="layer-control" id="layer-control">
+        <div class="layer-group">
+          <div class="group-label">Mapa base</div>
+          <div class="btn-row">
+            <button id="btn-topo" class="layer-btn active" data-tex="topo" aria-pressed="true">Topo</button>
+            <button id="btn-sat" class="layer-btn" data-tex="satellite" aria-pressed="false">Satélite</button>
+          </div>
+        </div>
+        <div class="layer-group">
+          <div class="group-label">Vista</div>
+          <div class="btn-row">
+            <button id="btn-2d" class="layer-btn" data-view="2d" aria-pressed="false">2D</button>
+            <button id="btn-3d" class="layer-btn active" data-view="3d" aria-pressed="true">3D</button>
+          </div>
+        </div>
+        <div class="layer-group">
+          <div class="group-label">Capas</div>
+          <button id="real-track-btn" class="layer-btn wide active" aria-pressed="true">🛰️ Traza GPS</button>
+        </div>
+      </div>
+
+      <button id="elevation-toggle">📈 Perfil</button>
+      <div id="elevation-panel">
+        <div id="elevation-chart">
+          <canvas id="elev-canvas"></canvas>
+          <div id="elevation-tooltip"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="tracks.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
