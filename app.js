@@ -142,10 +142,7 @@ function selectStage(sec, id) {
   sec.querySelector('.day-details').classList.add('open');
   sec.querySelector('.day-header').setAttribute('aria-expanded', 'true');
   flyToTrack(id);
-  if (window.innerWidth <= 820) {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('visible');
-  }
+  if (window.innerWidth <= 820) setMobileSidebar(false);
 }
 
 function flyToTrack(id) {
@@ -455,14 +452,15 @@ document.getElementById('btn-2d').addEventListener('click', () => setView('2d'))
 document.getElementById('btn-3d').addEventListener('click', () => setView('3d'));
 document.getElementById('real-track-btn').addEventListener('click', toggleRealTrack);
 document.getElementById('elevation-toggle').addEventListener('click', toggleElevation);
-document.getElementById('sidebar-toggle').addEventListener('click', () => {
-  const open = sidebar.classList.toggle('open');
+function setMobileSidebar(open) {
+  sidebar.classList.toggle('open', open);
   document.getElementById('sidebar-overlay').classList.toggle('visible', open);
-});
-document.getElementById('sidebar-overlay').addEventListener('click', () => {
-  sidebar.classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-});
+  document.getElementById('sidebar-toggle').style.display = (window.innerWidth <= 820 && !open) ? 'flex' : 'none';
+}
+
+document.getElementById('sidebar-toggle').addEventListener('click', () => setMobileSidebar(true));
+document.getElementById('sidebar-close').addEventListener('click', () => setMobileSidebar(false));
+document.getElementById('sidebar-overlay').addEventListener('click', () => setMobileSidebar(false));
 document.getElementById('layer-fab').addEventListener('click', () => document.getElementById('layer-control').classList.toggle('open'));
 
 // Sidebar collapse (desktop)
@@ -481,10 +479,17 @@ sidebarCollapse.addEventListener('click', () => {
 // ESC para cerrar sidebar en móvil
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-    sidebar.classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('visible');
+    setMobileSidebar(false);
   }
 });
 
-window.addEventListener('resize', debounce(() => { if (panelVisible()) drawElevationChart(); }, 150));
+window.addEventListener('resize', debounce(() => {
+  if (panelVisible()) drawElevationChart();
+  // En desktop, ocultar botón toggle y overlay
+  if (window.innerWidth > 820) {
+    document.getElementById('sidebar-toggle').style.display = 'none';
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+    sidebar.classList.remove('open');
+  }
+}, 150));
 setupProfileHover();
