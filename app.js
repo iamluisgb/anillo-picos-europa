@@ -416,27 +416,24 @@ function setupProfileHover() {
   const tip = document.getElementById('elevation-tooltip');
   const crosshair = document.getElementById('elevation-crosshair');
   const dot = document.getElementById('elevation-hoverdot');
-  chart.addEventListener('mousemove', e => {
+  chart.addEventListener('pointermove', e => {
     if (!profileCache || !profileGeom) return;
     const rect = chart.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const { pad, w, totalKm } = profileGeom;
-    const km = ((x - pad.left) / (w - pad.left - pad.right)) * totalKm;
-    if (km < 0 || km > totalKm) { hideHover(); return; }
+    const { pad, w } = profileGeom;
+    const km = ((x - pad.left) / (w - pad.left - pad.right)) * profileCache.totalKm;
+    if (km < 0 || km > profileCache.totalKm) { hideHover(); return; }
     const pts = profileCache.pts;
     let lo = 0, hi = pts.length - 1;
     while (lo < hi) { const m = (lo + hi) >> 1; pts[m].d < km ? lo = m + 1 : hi = m; }
     const p = pts[lo];
     const cx = profileGeom.X(p.d);
     const cy = profileGeom.Y(p.e);
-    // crosshair vertical
     crosshair.style.display = 'block';
     crosshair.style.left = cx + 'px';
-    // dot en la curva
     dot.style.display = 'block';
     dot.style.left = cx + 'px';
     dot.style.top = cy + 'px';
-    // tooltip (offset up from dot)
     tip.style.display = 'block';
     tip.style.left = cx + 'px';
     tip.style.top = (cy - 8) + 'px';
@@ -447,7 +444,7 @@ function setupProfileHover() {
     }
     hoverMarker.setLngLat([p.lng, p.lat]).addTo(map);
   });
-  chart.addEventListener('mouseleave', hideHover);
+  chart.addEventListener('pointerleave', hideHover);
 }
 function hideHover() {
   document.getElementById('elevation-tooltip').style.display = 'none';
