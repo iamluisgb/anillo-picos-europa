@@ -410,10 +410,12 @@ function drawElevationChart() {
 
 let profileGeom = null;
 
-/* hover en el perfil -> tooltip + punto en el mapa */
+/* hover en el perfil -> línea vertical + punto + tooltip */
 function setupProfileHover() {
   const chart = document.getElementById('elevation-chart');
   const tip = document.getElementById('elevation-tooltip');
+  const crosshair = document.getElementById('elevation-crosshair');
+  const dot = document.getElementById('elevation-hoverdot');
   chart.addEventListener('mousemove', e => {
     if (!profileCache || !profileGeom) return;
     const rect = chart.getBoundingClientRect();
@@ -421,14 +423,23 @@ function setupProfileHover() {
     const { pad, w, totalKm } = profileGeom;
     const km = ((x - pad.left) / (w - pad.left - pad.right)) * totalKm;
     if (km < 0 || km > totalKm) { hideHover(); return; }
-    // punto más cercano en km
     const pts = profileCache.pts;
     let lo = 0, hi = pts.length - 1;
     while (lo < hi) { const m = (lo + hi) >> 1; pts[m].d < km ? lo = m + 1 : hi = m; }
     const p = pts[lo];
+    const cx = profileGeom.X(p.d);
+    const cy = profileGeom.Y(p.e);
+    // crosshair vertical
+    crosshair.style.display = 'block';
+    crosshair.style.left = cx + 'px';
+    // dot en la curva
+    dot.style.display = 'block';
+    dot.style.left = cx + 'px';
+    dot.style.top = cy + 'px';
+    // tooltip (offset up from dot)
     tip.style.display = 'block';
-    tip.style.left = profileGeom.X(p.d) + 'px';
-    tip.style.top = profileGeom.Y(p.e) + 'px';
+    tip.style.left = cx + 'px';
+    tip.style.top = (cy - 8) + 'px';
     tip.textContent = `${p.d.toFixed(1)} km · ${Math.round(p.e)} m`;
     if (!hoverMarker) {
       const el = document.createElement('div'); el.className = 'hover-dot';
@@ -440,6 +451,8 @@ function setupProfileHover() {
 }
 function hideHover() {
   document.getElementById('elevation-tooltip').style.display = 'none';
+  document.getElementById('elevation-crosshair').style.display = 'none';
+  document.getElementById('elevation-hoverdot').style.display = 'none';
   if (hoverMarker) hoverMarker.remove();
 }
 
