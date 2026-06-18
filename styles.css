@@ -215,7 +215,8 @@ button { font-family: inherit; }
   background: rgba(15, 25, 35, 0.96); border-top: 1px solid #2a3a4a; z-index: 1000; display: none;
 }
 #elevation-panel.visible { display: block; }
-#elevation-chart { width: 100%; height: 100%; position: relative; }
+#elevation-chart { width: 100%; height: 100%; position: relative; cursor: crosshair; }
+#elev-canvas { display: block; }
 #elevation-crosshair {
   position: absolute; top: 18px; bottom: 24px; width: 1px; pointer-events: none; display: none; z-index: 1001;
   border-left: 1px dashed rgba(79,195,247,0.35);
